@@ -1,0 +1,30 @@
+/* Handwriting belongs to the keepsakes; interface fonts use their original rules. */
+:is(#perfume-note,#music-note,#journal) .hand,#journal .diary-page-label,#journal .page-number{font-family:"RongHand","KaiTi",cursive;font-weight:400}
+.hand{letter-spacing:.025em}
+.perfume-ink{font-size:24px;line-height:1.9}
+.lyric-line{font-size:23px;line-height:1.9}
+.diary-page h2{font-size:24px;margin:18px 0 30px}
+.diary-page h3{font-size:21px;margin:30px 0 12px}
+.diary-page p.hand{font-size:21px;line-height:2.1;margin:15px 0}
+.diary-dialog{width:860px;overflow:visible;max-height:94dvh}
+.diary-shell{background:#e6d8bc;border-left:7px solid #747c61;padding:0 7px 7px;border-radius:5px 12px 12px 5px}
+.diary-header{position:relative;background:transparent;padding:13px 20px}
+.diary-spread{grid-template-columns:1fr 1fr;gap:0;isolation:isolate}
+.diary-spread:after{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 12px);width:24px;background:linear-gradient(90deg,transparent,#76633e18 45%,#62502b2c 50%,#fff7e252 58%,transparent);pointer-events:none;z-index:2}
+.diary-page{min-height:390px;padding:25px 38px 40px;background:repeating-linear-gradient(0deg,transparent 0,transparent 39px,#b6b39514 39px,#b6b39514 40px),#faf2de}
+.diary-page[hidden]{display:none!important}
+.diary-page.left-page,.diary-page.right-page{animation:none}
+.diary-navigation{display:flex;justify-content:space-between;align-items:center;padding:13px 14px 6px;color:#80765f;font-size:12px}
+.diary-navigation button{border:0;background:transparent;color:#686c52;padding:8px 12px;min-height:36px;cursor:pointer;font-size:13px}
+.diary-navigation button:disabled{opacity:.25;cursor:default}
+.diary-navigation button:focus-visible{outline:1px solid #758363;outline-offset:2px}
+.turn-forward .right-page{animation:turn-next .65s ease both;transform-origin:left center}
+.turn-backward .left-page{animation:turn-previous .65s ease both;transform-origin:right center}
+@keyframes turn-next{from{transform:rotateY(-75deg);filter:brightness(.85)}to{transform:rotateY(0);filter:none}}
+@keyframes turn-previous{from{transform:rotateY(75deg);filter:brightness(.85)}to{transform:rotateY(0);filter:none}}
+@media(max-width:760px){.perfume-ink{font-size:21px}.lyric-line{font-size:20px}.diary-dialog{width:94vw;max-height:94dvh}.diary-spread{grid-template-columns:1fr}.diary-spread:after{display:none}.diary-page{min-height:360px;padding:22px 28px 40px}.diary-page p.hand{font-size:20px;line-height:2}.diary-page h2{font-size:23px}.diary-page h3{font-size:20px}.diary-page.left-page,.diary-page.right-page{box-shadow:inset 9px 0 20px #625e330b}.diary-header>span{font-size:26px}.diary-navigation{padding:6px 5px 1px}.turn-backward .diary-page{animation:turn-previous .55s ease both}.turn-forward .diary-page{animation:turn-next .55s ease both}.diary-header{padding:12px}.diary-header>div{gap:8px}}
+@media(prefers-reduced-motion:reduce){.diary-page{animation:none!important}}
+
+#gallery-title{font-family:"RongHand",cursive}
+
+@font-face{font-family:RongHand;src:url("rong-hand.ttf") format("truetype");font-weight:400;font-display:block}

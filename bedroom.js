@@ -1,0 +1,38 @@
+/* Three keepsakes, three distinct reveals; exploration state stays in this visit. */
+window.Bedroom=(()=>{'use strict';
+const $=s=>document.querySelector(s),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const items={perfume:'perfume-note',music:'music-note',diary:'journal'},visited=new Set();
+let active=false,introShown=false,completionShown=false,entryTimer,completeTimer,penTimer,penToken=0,penIndex=0,penChars=[],penRunning=false;
+const intro=$('#bedroom-intro'),complete=$('#bedroom-complete'),journal=$('#journal');
+function progress(){const count=$('#explore-count');count.textContent=visited.size+' / 3';for(const b of document.querySelectorAll('[data-explore]'))b.dataset.seen=visited.has(b.dataset.explore);for(const b of document.querySelectorAll('[data-bedroom-item]'))b.dataset.seen=visited.has(b.dataset.bedroomItem);}
+function maybeComplete(){clearTimeout(completeTimer);if(active&&visited.size===3&&!completionShown&&!Object.values(items).some(id=>$('#'+id).open)){completeTimer=setTimeout(()=>{if(!active||Object.values(items).some(id=>$('#'+id).open))return;completionShown=true;complete.showModal();},300);}}
+function clearWriting(){clearTimeout(penTimer);penToken++;penRunning=false;$('#writing-nib').hidden=true;}
+function enter(room){clearTimeout(entryTimer);clearTimeout(completeTimer);const wasActive=active;active=room==='bedroom';$('#bedroom-progress').hidden=!active;progress();if(!active){clearWriting();for(const id of['bedroom-intro','bedroom-complete',...Object.values(items)])if($('#'+id).open)$('#'+id).close();return;}
+if(!wasActive&&!introShown){entryTimer=setTimeout(()=>{if(!active)return;introShown=true;intro.showModal();},650);}}
+function mark(item){if(!active)return;visited.add(item);progress();maybeComplete();}
+for(const[item,id]of Object.entries(items)){const dialog=$('#'+id);dialog.addEventListener('close',()=>{if(item==='diary')clearWriting();mark(item);});}
+for(const dialog of document.querySelectorAll('.bedroom-dialog'))dialog.addEventListener('click',e=>{if(e.target!==dialog)return;const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();});
+for(const button of document.querySelectorAll('[data-close]'))button.addEventListener('click',()=>$('#'+button.dataset.close).close());
+$('#start-bedroom').addEventListener('click',()=>intro.close());$('#bedroom-stay').addEventListener('click',()=>complete.close());$('#bedroom-next').addEventListener('click',()=>{complete.close();window.houseNavigation.goToRoom('study');});
+for(const button of document.querySelectorAll('[data-explore]'))button.addEventListener('click',()=>{window.houseNavigation.focusItem(button.dataset.explore);open(button.dataset.explore);});
+function perfume(){const p=$('#perfume-ink');if(!p.childElementCount){[...'一瓶大概率是木质调的香水'].forEach((char,i)=>{if(i===6)p.append(document.createElement('br'));const span=document.createElement('span');span.textContent=char;span.style.setProperty('--i',i);p.append(span);});}
+const mist=$('#scent-mist');mist.replaceChildren();for(let i=0;i<44;i++){const dot=document.createElement('i');dot.style.setProperty('--dx',90+(i*79%340)+'px');dot.style.setProperty('--dy',((i*47%155)-77)+'px');dot.style.setProperty('--s',2+(i%4)*.7+'px');dot.style.setProperty('--delay',(i%9)*.025+'s');mist.append(dot);}const dialog=$('#perfume-note');dialog.classList.remove('spraying');void dialog.offsetWidth;dialog.classList.add('spraying');}
+$('#spray-again').addEventListener('click',perfume);
+function wrapInk(){if(journal.dataset.wrapped)return;journal.dataset.wrapped="true";for(const paragraph of document.querySelectorAll('.ink-write')){const walk=node=>{for(const child of [...node.childNodes]){if(child.nodeType===Node.TEXT_NODE){const fragment=document.createDocumentFragment();for(const char of [...child.textContent]){const span=document.createElement('span');span.className='ink-char';span.textContent=char===' '?'\u00a0':char;fragment.append(span);penChars.push(span);}child.replaceWith(fragment);}else if(child.nodeType===Node.ELEMENT_NODE&&child.tagName!=='BR')walk(child);}};paragraph.setAttribute('aria-label',paragraph.innerText.replace(/\n/g,'，'));walk(paragraph);}}
+function finishWriting(){clearWriting();penIndex=penChars.length;for(const span of penChars){span.classList.add('written');span.classList.remove('inking');}$('#finish-writing').textContent='已显示全文';}
+$('#finish-writing').addEventListener('click',finishWriting);
+function writeDiary(){clearWriting();wrapInk();penChars=[...journal.querySelectorAll('.diary-page[data-visible="true"] .ink-char')];penIndex=0;$('#finish-writing').textContent='看完整页';for(const char of penChars)char.classList.remove('written','inking');if(reduced){finishWriting();return;}const token=penToken;penRunning=true;
+function step(){if(token!==penToken||!journal.open)return;if(penIndex>=penChars.length){finishWriting();return;}const char=penChars[penIndex++];char.classList.add('written','inking');const r=char.getBoundingClientRect(),base=$('.diary-shell').getBoundingClientRect(),viewport=journal.getBoundingClientRect(),nib=$('#writing-nib');nib.hidden=r.top<viewport.top+60||r.bottom>viewport.bottom-12;nib.style.left=(r.left-base.left+r.width*.75)+'px';nib.style.top=(r.top-base.top+r.height*.68)+'px';const pause=/[：，。~、]/.test(char.textContent)?120:/[a-zA-Z0-9/+]/.test(char.textContent)?22:48;penTimer=setTimeout(step,pause);}
+penTimer=setTimeout(step,850);}
+function open(item){if(!active||!items[item])return false;const dialog=$('#'+items[item]);if(dialog.open)return true;dialog.showModal();dialog.scrollTop=0;if(item==='perfume')perfume();if(item==='music'){dialog.classList.remove('music-playing');void dialog.offsetWidth;dialog.classList.add('music-playing');}if(item==='diary'){bookPage=0;showBookPage(0);}return true;}
+
+let bookPage=0,swipeX=null;const bookPages=[...journal.querySelectorAll('[data-page]')];
+const pageStep=()=>matchMedia('(max-width:760px)').matches?1:2;
+function showBookPage(direction){clearWriting();const step=pageStep();bookPage=Math.min(bookPage,4-step);if(step===2)bookPage-=bookPage%2;bookPages.forEach((page,i)=>{page.dataset.visible=i>=bookPage&&i<bookPage+step;page.hidden=page.dataset.visible!=='true';});$('#diary-prev').disabled=bookPage===0;$('#diary-next').disabled=bookPage+step>=4;$('#diary-position').textContent=step===2?(bookPage+1)+' — '+(bookPage+2)+' / 4':(bookPage+1)+' / 4';const spread=$('.diary-spread');spread.classList.remove('turn-forward','turn-backward');void spread.offsetWidth;if(direction)spread.classList.add(direction>0?'turn-forward':'turn-backward');writeDiary();}
+function turnBook(direction){if(bookPage+direction*pageStep()<0||bookPage+direction*pageStep()>=4)return;bookPage+=direction*pageStep();showBookPage(direction);}
+$('#diary-prev').addEventListener('click',()=>turnBook(-1));$('#diary-next').addEventListener('click',()=>turnBook(1));
+journal.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();turnBook(e.key==='ArrowLeft'?-1:1);}});
+$('.diary-spread').addEventListener('touchstart',e=>{swipeX=e.touches[0].clientX;},{passive:true});$('.diary-spread').addEventListener('touchend',e=>{if(swipeX===null)return;const dx=e.changedTouches[0].clientX-swipeX;if(Math.abs(dx)>55)turnBook(dx<0?1:-1);swipeX=null;},{passive:true});
+addEventListener('resize',()=>{if(journal.open)showBookPage(0);});
+return{enter,open,progress,status:()=>({active,visited:[...visited],introShown,completionShown,introOpen:intro.open,completeOpen:complete.open,penRunning,penIndex,penTotal:penChars.length,openItem:Object.entries(items).find(([,id])=>$('#'+id).open)?.[0]||null})};
+})();
